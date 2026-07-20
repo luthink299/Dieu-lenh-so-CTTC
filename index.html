@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ĐIỀU LỆNH SỐ – THANH NIÊN CHUẨN</title>
+<title>ĐIỀU LỆNH SỐ - CÁN BỘ CHUẨN</title>
 <style>
 :root{
   --bg:#0b1220; --panel:#111c30; --panel2:#16243d; --line:#22344f;
@@ -244,7 +244,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;margin-top:24px;line-
       <div class="sub">Công trình thanh niên chuyển đổi số · Chấp hành điều lệnh CAND</div>
     </div>
     <div class="right">
-      <div id="unitName">Ban Thanh niên CA tỉnh</div>
+      <div id="unitName">Tổ điều lệnh - Phòng CTCT</div>
       <b id="todayTxt"></b>
     </div>
   </div>
@@ -282,7 +282,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;margin-top:24px;line-
   <div class="view" id="v-khoqr"></div>
 
   <footer>
-    Phần mềm chạy nội bộ, không kết nối Internet · Dữ liệu lưu trên thiết bị · Phục vụ phong trào thi đua
+    · Công trình của Ban Thanh niên Công an tỉnh · Phần mềm chạy nội bộ, không kết nối Internet · Phục vụ phong trào thi đua
     <b style="color:var(--gold2)">"Ba nhất"</b> – nhóm tiêu chí "Nghiêm kỷ cương" &amp; "Tường công nghệ"
   </footer>
 </div>
@@ -2803,7 +2803,7 @@ RENDER.dvtn = function(){
   $('#v-dvtn').innerHTML = `
   <section class="card">
     <h2>◷ Quản lý cán bộ chiến sĩ</h2>
-    <div class="desc">Số hóa danh sách CBCS. Mỗi người có 01 mã định danh dùng để sinh QR điểm danh và liên kết hồ sơ chấp hành điều lệnh.</div>
+    <div class="desc">Số hóa danh sách CBCS. Mỗi người có 01 mã định danh dùng để liên kết hồ sơ chấp hành điều lệnh.</div>
     <h3 class="sec">Thêm đoàn viên</h3>
     <div class="row c3">
       <div><label>Họ và tên</label><input id="m_name" placeholder="VD: Nguyễn Văn A"></div>
@@ -2857,7 +2857,7 @@ RENDER.qr = function(){
   $('#v-qr').innerHTML = `
   <section class="card">
     <h2>◷ Điểm danh điều lệnh</h2>
-    <div class="desc">Ghi nhận quân số có mặt – vắng mặt đầu giờ, phục vụ tiêu chí "Giờ giấc – kỷ luật thời gian". Bấm lại vào nút đã chọn để hủy nếu thao tác nhầm.</div>
+    <div class="desc">Ghi nhận quân số có mặt – vắng mặt đầu giờ, phục vụ tiêu chí "Kỷ luật thời gian". Bấm lại vào nút đã chọn để hủy nếu thao tác nhầm.</div>
 
     <div class="row c3">
       <div><label>Ngày điểm danh</label>
@@ -3059,7 +3059,7 @@ RENDER.thidua = function(){
   $('#v-thidua').innerHTML = `
   <section class="card">
     <h2>★ Thi đua – tự động xếp loại điều lệnh</h2>
-    <div class="desc">Tổng hợp điểm điều lệnh trung bình của từng CBCS làm căn cứ bình xét thi đua. Phân loại theo 4 nhóm bám Kế hoạch phong trào cấp tỉnh.</div>
+    <div class="desc">Tổng hợp điểm điều lệnh trung bình của từng CBCS làm căn cứ bình xét thi đua. Phân loại theo 4 nhóm.</div>
     <div class="kpis">
       <div class="kpi green"><div class="v">${buckets.g}</div><div class="l">Điển hình tiên tiến (≥95)</div></div>
       <div class="kpi blue"><div class="v">${buckets.b}</div><div class="l">Thực hiện tốt (85–94)</div></div>
@@ -3143,7 +3143,7 @@ RENDER.khoqr = function(){
   const lib=library();
   $('#v-khoqr').innerHTML = `
   <section class="card">
-    <h2>▤ Kho học liệu QR – tuyên truyền điều lệnh</h2>
+    <h2>▤ Kho học liệu QR – tuyên truyền điều lệnh (Thử nghiệm) </h2>
     <div class="desc">Mỗi tài liệu điều lệnh gắn 01 mã QR. CBCS quét mã để truy cập nhanh, học mọi lúc – phục vụ "tự soi, tự sửa, tự rèn".</div>
     <div class="row c3">
       <div><label>Tên tài liệu</label><input id="lib_title" placeholder="VD: Quy định về trực ban"></div>
