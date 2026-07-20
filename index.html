@@ -3176,7 +3176,7 @@ function delLib(id){ DB.save('library', library().filter(l=>l.id!==id)); RENDER.
 /* ============== KHỞI ĐỘNG ============== */
 seed();
 upgradeRoster();
-$('#unitName').textContent = DB.load('unit','Ban Thanh niên CA tỉnh');
+$('#unitName').textContent = DB.load('unit','Phòng CTCT');
 $('#todayTxt').textContent = new Date().toLocaleDateString('vi-VN',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'});
 RENDER.dash();
 
