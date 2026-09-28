@@ -2770,6 +2770,16 @@ RENDER.dash = function(){
       <div class="kpi red"><div class="v">${viol}</div><div class="l">Lượt có vi phạm</div></div>
     </div>
 
+    ${(function(){
+      const absToday = tdCk.filter(c=>c.status==='absent');
+      if(!absToday.length) return '';
+      const rc={}; absToday.forEach(c=>{ const r=c.reason||'unauth'; rc[r]=(rc[r]||0)+1; });
+      return `<h3 class="sec">Vắng mặt hôm nay theo lý do (${absToday.length})</h3>
+      <div class="flex" style="flex-wrap:wrap;gap:8px">
+        ${Object.keys(ABSENT_REASONS).map(k=>rc[k]? `<span class="pill ${k==='unauth'?'r':'a'}">${ABSENT_REASONS[k]}: ${rc[k]}</span>`:'').join('')}
+      </div>`;
+    })()}
+
     <h3 class="sec">Mức chấp hành theo nhóm tiêu chí</h3>
     ${Object.keys(grpMap).map(g=>{
       const o=grpMap[g]; const pct=o.max? Math.round(o.got/o.max*100):0;
@@ -2847,6 +2857,7 @@ function delMember(id){
 }
 
 /* -------------------- 3. QR ĐIỂM DANH -------------------- */
+const ABSENT_REASONS = {late:'Xin đến muộn', study:'Đi học/tập huấn', duty:'Đi công tác', unauth:'Không phép'};
 RENDER.qr = function(){
   const d = DD_DATE || today();
   const ck = checkins().filter(c=>c.date===d);
@@ -2854,6 +2865,8 @@ RENDER.qr = function(){
   const present = ck.filter(c=>c.status!=='absent');
   const absent  = ck.filter(c=>c.status==='absent');
   const chuaCham = ms.length - ck.length;
+  const reasonCount = {};
+  absent.forEach(c=>{ const r=c.reason||'unauth'; reasonCount[r]=(reasonCount[r]||0)+1; });
   $('#v-qr').innerHTML = `
   <section class="card">
     <h2>◷ Điểm danh điều lệnh</h2>
@@ -2873,10 +2886,15 @@ RENDER.qr = function(){
       <div class="kpi blue"><div class="v">${ms.length}</div><div class="l">Tổng quân số</div></div>
     </div>
 
+    ${absent.length? `<h3 class="sec">Lý do vắng trong ngày</h3>
+    <div class="flex" style="flex-wrap:wrap;gap:8px;margin-bottom:4px">
+      ${Object.keys(ABSENT_REASONS).map(k=>reasonCount[k]? `<span class="pill ${k==='unauth'?'r':'a'}">${ABSENT_REASONS[k]}: ${reasonCount[k]}</span>` : '').join('')}
+    </div>` : ''}
+
     <h3 class="sec">Danh sách ngày ${fmtDate(d)}</h3>
     <div class="tbl-wrap">
     <table>
-      <thead><tr><th>Họ tên</th><th class="hide-xs">Đội/Đơn vị</th><th class="num">Giờ</th><th class="num">Ghi nhận</th></tr></thead>
+      <thead><tr><th>Họ tên</th><th class="hide-xs">Đội/Đơn vị</th><th class="num">Giờ</th><th>Lý do vắng</th><th class="num">Ghi nhận</th></tr></thead>
       <tbody>
         ${ms.map(m=>{
           const c=ck.find(x=>x.memberId===m.id);
@@ -2885,10 +2903,11 @@ RENDER.qr = function(){
             <td><b>${esc(m.name)}</b><div class="tag">${esc(m.rank)}</div></td>
             <td class="hide-xs">${esc(m.team)}</td>
             <td class="num tag">${c&&st==='present'? c.time : '—'}</td>
+            <td>${st==='absent'? `<span class="pill ${c.reason==='unauth'||!c.reason?'r':'a'}">${ABSENT_REASONS[c.reason]||ABSENT_REASONS.unauth}</span>` : '<span class="tag">—</span>'}</td>
             <td class="num">
               <div style="display:flex;gap:5px;justify-content:flex-end">
                 <button class="btn sm ${st==='present'?'':'ghost'}" style="${st==='present'?'background:linear-gradient(135deg,var(--green),#1d7a4c)':''}" onclick="setCk('${m.id}','present')">Có mặt</button>
-                <button class="btn sm ${st==='absent'?'':'ghost'}" onclick="setCk('${m.id}','absent')">Vắng</button>
+                <button class="btn sm ${st==='absent'?'':'ghost'}" style="${st==='absent'?'background:linear-gradient(135deg,var(--red),var(--reddk))':''}" onclick="askAbsentReason('${m.id}')">Vắng</button>
               </div>
             </td></tr>`;
         }).join('')}
@@ -2901,19 +2920,33 @@ RENDER.qr = function(){
 };
 let DD_DATE = null;
 function setDDDate(v){ DD_DATE = v || today(); RENDER.qr(); }
-function setCk(id, status){
+function setCk(id, status, reason){
   const d = DD_DATE || today();
   let cks = checkins();
   const i = cks.findIndex(c=>c.memberId===id && c.date===d);
   if(i>=0){
-    if(cks[i].status===status || (status==='present' && !cks[i].status)){ cks.splice(i,1); }   // bấm lại -> hủy
-    else { cks[i].status=status; cks[i].time=new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}); }
+    if(cks[i].status===status && (status!=='absent' || cks[i].reason===reason)){ cks.splice(i,1); }   // bấm lại y hệt -> hủy
+    else { cks[i].status=status; cks[i].time=new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+      if(status==='absent'){ cks[i].reason=reason||'unauth'; } else { delete cks[i].reason; } }
   } else {
-    cks.push({memberId:id, date:d, status:status, time:new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})});
+    const e={memberId:id, date:d, status:status, time:new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})};
+    if(status==='absent') e.reason = reason||'unauth';
+    cks.push(e);
   }
   DB.save('checkins',cks); RENDER.qr();
 }
 function checkin(id){ setCk(id,'present'); }
+function askAbsentReason(id){
+  const d = DD_DATE || today();
+  const cur = checkins().find(c=>c.memberId===id && c.date===d);
+  const curReason = (cur && cur.status==='absent') ? cur.reason : null;
+  modal(`<h3>Lý do vắng mặt</h3>
+    <div class="desc">Chọn lý do vắng cho cán bộ chiến sĩ. Bấm lại đúng lý do đang chọn để hủy điểm danh vắng.</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${Object.keys(ABSENT_REASONS).map(k=>`<button class="btn ${curReason===k?'gold':'ghost'} full" onclick="setCk('${id}','absent','${k}');closeModal()">${ABSENT_REASONS[k]}</button>`).join('')}
+    </div>
+    <div class="btnbar"><button class="btn ghost full" onclick="closeModal()">Đóng</button></div>`);
+}
 function markAll(){
   const d = DD_DATE || today();
   let cks = checkins().filter(c=>c.date!==d);
@@ -2929,18 +2962,36 @@ function resetToday(){
 function exportCheckin(){
   const d = DD_DATE || today();
   const ck = checkins().filter(c=>c.date===d);
-  let csv='\uFEFFSTT,Ho ten,Cap bac,Doi/Don vi,Ngay,Trang thai,Gio ghi nhan\n';
+  let csv='\uFEFFSTT,Ho ten,Cap bac,Doi/Don vi,Ngay,Trang thai,Ly do vang,Gio ghi nhan\n';
   members().forEach((m,i)=>{
     const c=ck.find(x=>x.memberId===m.id);
     const st = !c ? 'Chua diem danh' : (c.status==='absent'?'Vang mat':'Co mat');
-    csv+=`${i+1},"${m.name}","${m.rank}","${m.team}","${d}","${st}","${c&&c.status!=='absent'?c.time:''}"\n`;
+    const ly = (c && c.status==='absent') ? (ABSENT_REASONS[c.reason]||ABSENT_REASONS.unauth) : '';
+    csv+=`${i+1},"${m.name}","${m.rank}","${m.team}","${d}","${st}","${ly}","${c&&c.status!=='absent'?c.time:''}"\n`;
   });
   const p=ck.filter(c=>c.status!=='absent').length, a=ck.filter(c=>c.status==='absent').length;
-  csv+=`\nTONG HOP,,,,"${d}","Co mat: ${p} | Vang: ${a} | Chua diem danh: ${members().length-ck.length}",\n`;
+  csv+=`\nTONG HOP,,,,"${d}","Co mat: ${p} | Vang: ${a} | Chua diem danh: ${members().length-ck.length}",,\n`;
+  const reasonCount={};
+  ck.filter(c=>c.status==='absent').forEach(c=>{ const r=c.reason||'unauth'; reasonCount[r]=(reasonCount[r]||0)+1; });
+  if(a){
+    csv+='\nTHONG KE LY DO VANG\nLy do,So luot\n';
+    Object.keys(ABSENT_REASONS).forEach(k=>{ if(reasonCount[k]) csv+=`"${ABSENT_REASONS[k]}",${reasonCount[k]}\n`; });
+  }
   dl(csv,'diem_danh_'+d+'.csv');
 }
-function dl(csv,name){
+async function dl(csv,name){
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  try{
+    if(window.claude && typeof window.claude.use==='function'){
+      const downloads = await window.claude.use('downloads');
+      if(downloads){ await downloads.save({filename:name, data:blob}); return; }
+    }
+  }catch(e){
+    if(e && e.code==='declined') return;
+    alert('Không thể tải file: ' + (e && e.message ? e.message : 'đã có lỗi xảy ra.'));
+    return;
+  }
+  // dự phòng khi capability không khả dụng
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click();
 }
 
@@ -3174,8 +3225,41 @@ function addLib(){
 function delLib(id){ DB.save('library', library().filter(l=>l.id!==id)); RENDER.khoqr(); }
 
 /* ============== KHỞI ĐỘNG ============== */
+
+/* ---------- DỮ LIỆU ĐIỂM DANH MẪU (ngày 28/9/2026) ---------- */
+const CHECKIN_SEED_DATE = '2026-09-28';
+const CHECKIN_SEED = {
+  tn01:{status:'present',time:'13:28'}, tn02:{status:'present',time:'13:28'},
+  tn03:{status:'present',time:'13:28'}, tn04:{status:'absent'},
+  tn05:{status:'present',time:'13:34'}, tn06:{status:'present',time:'13:29'},
+  tn07:{status:'absent'}, tn08:{status:'absent'}, tn09:{status:'absent'},
+  tn10:{status:'present',time:'13:29'}, tn11:{status:'present',time:'13:29'},
+  tn12:{status:'present',time:'13:29'}, tn13:{status:'present',time:'13:29'},
+  tn14:{status:'absent'}, tn15:{status:'absent'}, tn16:{status:'absent'},
+  tn17:{status:'absent'}, tn18:{status:'absent'}, tn19:{status:'absent'},
+  tn20:{status:'absent'}, tn21:{status:'absent'},
+  tn22:{status:'present',time:'13:30'}, tn23:{status:'present',time:'13:30'},
+  tn24:{status:'present',time:'13:30'}, tn25:{status:'absent'},
+  tn26:{status:'present',time:'13:34'}, tn27:{status:'present',time:'13:34'}
+};
+function seedCheckinDemo(){
+  if(DB.load('ck_seed_v',0) >= 1){ return; }
+  let cks = checkins();
+  if(!cks.some(c=>c.date===CHECKIN_SEED_DATE)){
+    Object.keys(CHECKIN_SEED).forEach(id=>{
+      const e = CHECKIN_SEED[id];
+      const rec = {memberId:id, date:CHECKIN_SEED_DATE, status:e.status};
+      if(e.status==='present') rec.time = e.time;
+      cks.push(rec);
+    });
+    DB.save('checkins', cks);
+  }
+  DB.save('ck_seed_v', 1);
+}
+
 seed();
 upgradeRoster();
+seedCheckinDemo();
 $('#unitName').textContent = DB.load('unit','Phòng CTCT');
 $('#todayTxt').textContent = new Date().toLocaleDateString('vi-VN',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'});
 RENDER.dash();
