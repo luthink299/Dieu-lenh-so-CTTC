@@ -2920,6 +2920,13 @@ RENDER.qr = function(){
 };
 let DD_DATE = null;
 function setDDDate(v){ DD_DATE = v || today(); RENDER.qr(); }
+function resetDDDateToToday(){
+  DD_DATE = null;
+  const activeView = document.querySelector('.view.active');
+  if(activeView && activeView.id==='v-qr') RENDER.qr();
+}
+window.addEventListener('pageshow', resetDDDateToToday);
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') resetDDDateToToday(); });
 function setCk(id, status, reason){
   const d = DD_DATE || today();
   let cks = checkins();
