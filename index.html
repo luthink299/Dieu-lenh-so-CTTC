@@ -2857,7 +2857,7 @@ function delMember(id){
 }
 
 /* -------------------- 3. QR ĐIỂM DANH -------------------- */
-const ABSENT_REASONS = {late:'Xin đến muộn', study:'Đi học/tập huấn', duty:'Đi công tác', unauth:'Không phép'};
+const ABSENT_REASONS = {late:'Xin đến muộn', study:'Đi học/tập huấn', duty:'Đi công tác', leave:'Nghỉ phép', unauth:'Không phép'};
 RENDER.qr = function(){
   const d = DD_DATE || today();
   const ck = checkins().filter(c=>c.date===d);
